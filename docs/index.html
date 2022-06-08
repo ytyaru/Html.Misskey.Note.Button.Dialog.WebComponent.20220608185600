@@ -1,0 +1,48 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Misskeyでノートするボタンを作った</title>
+<meta name="description" content="指定したインスタンスに指定したテキストを投稿できます。">
+<meta name="author" content="ytyaru">
+<link rel="license" href="https://creativecommons.org/licenses/by-sa/3.0/deed.ja">
+<link rel="icon" href="assets/image/avator.png">
+<link rel="stylesheet" href="css/styles.css">
+<link rel="stylesheet" href="css/toot-dialog.css">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!--<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">-->
+<link rel="stylesheet" type="text/css" href="./lib/toastify/1.11.2/min.css">
+<link rel="stylesheet" type="text/css" href="css/toastify.css">
+<!--<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>-->
+<script type="text/javascript" src="./lib/toastify/1.11.2/min.js"></script>
+<script src="js/misskey-note-client.js"></script>
+<script src="js/misskey-note-button.js"></script>
+<script src="js/misskey-note-dialog.js"></script>
+<script src="js/main.js"></script>
+</head>
+<body>
+    <h1>Misskeyでノートするボタンを作った</h1>
+    <ol>
+        <li>アイコンを押す</li>
+        <li>ノートしたいテキストを入力する</li>
+        <li>指定したインスタンスにノートする</li>
+        <li>ノートした結果がJSONで返る</li>
+    </ol>
+    <misskey-note-dialog domain="misskey.io misskey.dev" status="いいね！"></misskey-note-dialog>
+    <!--
+    <button id="toot-button" title="トゥートする"><img src="./asset/image/mastodon_mascot.svg" width="64" height="64"></button>
+    <dialog id="toot-dialog">
+        <form method="dialog">
+            <div id="status" data-init="いいね！" contenteditable></div>
+            <span id="status-remaining"></span>
+            <toot-button domain="mstdn.jp"></toot-button>
+            <toot-button domain="pawoo.net"></toot-button>
+            <toot-button></toot-button>
+            <button><span style="font-size:64px;">❌</span></button>
+        </form>
+    </dialog>
+    -->
+    <textarea id="res">ここに結果が出ます。</textarea>
+</body>
+</html>
+
