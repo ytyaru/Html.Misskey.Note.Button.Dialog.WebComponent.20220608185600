@@ -32,7 +32,7 @@ class MisskeyNoteClient {
     async post(endpoint, headers, params) {
         const method = "POST";
         const body = JSON.stringify(params);
-        const url = `https://${this.domain}/${endpoint}`
+        const url = `https://${this.domain}/api/${endpoint}`
         console.debug(url)
         const data = {}
         data.method = method
@@ -65,14 +65,15 @@ class MisskeyNoteClient {
         };
         const res = await this.post('auth/session/generate', null, params)
         console.debug(res)
-        sessionStorage.setItem(`${domain}-token`, res.token);
-        window.location.href = res.url
+        sessionStorage.setItem(`${this.domain}-token`, res.token);
+        console.debug(res.url)
+        //window.location.href = res.url
     }
     async getToken(appSecret, token) {
         console.debug('----- token -----')
         const params = {
-            appSecret: 'authorization_code',
-            token: sessionStorage.getItem(`${domain}-token`),
+            appSecret: appSecret,
+            token: token,
         };
         return await this.post('auth/session/userkey', null, params)
     }
@@ -89,13 +90,16 @@ class MisskeyNoteClient {
     }
     */
     async note(i, text) {
-        console.debug('----- toot -----')
-        const statusEl = document.getElementById('status')
+        console.debug('----- note -----')
+        //const statusEl = document.getElementById('status')
         //const status = (statusEl.hasAttribute('contenteditable')) ? statusEl.innerText : statusEl.value
-        console.debug('status:', status)
-        const headers = { 'Authorization': `Bearer ${accessToken}` }
-        const params = {status: status, visibility:'public'};
-        return await this.post('api/v1/statuses', headers, params)
+        //console.debug('status:', status)
+        console.debug(i)
+        console.debug(text)
+        //const headers = { 'Authorization': `Bearer ${accessToken}` }
+        //const params = {status: status, visibility:'public'};
+        const params = {i:i, text:text};
+        return await this.post('notes/create', null, params)
     }
     // https://scrapbox.io/nwtgck/SHA256%E3%81%AE%E3%83%8F%E3%83%83%E3%82%B7%E3%83%A5%E3%82%92JavaScript%E3%81%AEWeb%E6%A8%99%E6%BA%96%E3%81%AE%E3%83%A9%E3%82%A4%E3%83%96%E3%83%A9%E3%83%AA%E3%81%A0%E3%81%91%E3%81%A7%E8%A8%88%E7%AE%97%E3%81%99%E3%82%8B
     async #sha256(str) {// const digest = await sha256("hello"); 
