@@ -23,6 +23,7 @@ class MisskeyNoteButton extends HTMLElement {
         this._authorizer = this.#getAuthorizer()
         const i = await this._authorizer.redirectCallback().catch(e=>this.#error(e))
         if (i) {
+            console.debug('----- 認証リダイレクト後 -----')
             this._client = new MisskeyApiClient(sessionStorage.getItem(`misskey-domain`), i)
             const res = await this._client.note(sessionStorage.getItem(`misskey-text`)).catch(e=>this.#error(e))
             this.#noteEvent(res)
@@ -46,10 +47,10 @@ class MisskeyNoteButton extends HTMLElement {
     }
     #noteEvent(json) { 
         console.log(this.domain)
-        console.log(json.id)
-        console.log(`https://${this.domain}/notes/${json.id}`)
+        console.log(json.createdNote.id)
+        console.log(`https://${this.domain}/notes/${json.createdNote.id}`)
         if (WebmentionRequester) {
-            new WebmentionRequester().request(`https://${this.domain}/notes/${json.id}`)
+            new WebmentionRequester().request(`https://${this.domain}/notes/${json.createdNote.id}`)
         }
         const params = {
             domain: this.domain,
