@@ -8,7 +8,8 @@ class MisskeyNoteClientV12 { // https://forum.misskey.io/d/6-miauth
         this.domain = domain
         //this.scope = 'read write follow push'
         //this.scope = 'write:statuses'
-        this.permission = ['write:notes'] // https://misskey.m544.net/api-doc/#section/Permissions
+        //this.permission = ['write:notes'] // https://misskey.m544.net/api-doc/#section/Permissions
+        this.permission = 'write:notes' // カンマ区切り。https://misskey.m544.net/api-doc/#section/Permissions
     }
     getDefaultJsonHeaders() { return {
         'Accept': 'application/json',
@@ -50,9 +51,9 @@ class MisskeyNoteClientV12 { // https://forum.misskey.io/d/6-miauth
     }
     async authorize() {
         console.debug('----- misskey v12 authorize -----')
-        sessionStorage.setItem(`misskey-v12-domain`, this.domain)
+        sessionStorage.setItem(`misskey-domain`, this.domain)
         const session = UUIDv4.generate()
-        sessionStorage.setItem(`misskey-v12-${this.domain}-session`, session)
+        sessionStorage.setItem(`misskey-${this.domain}-session`, session)
         const endpoint = `https://${this.domain}/miauth/${session}`
         const params = {
             name: `note requester`,
@@ -87,10 +88,10 @@ class MisskeyNoteClientV12 { // https://forum.misskey.io/d/6-miauth
         const url = new URL(location.href)
         console.debug('----- redirectCallback() -----')
         console.debug(url, url.href)
-        console.debug(url.searchParams.has('session'), sessionStorage.getItem(`misskey-v12-domain`))
+        console.debug(url.searchParams.has('session'), sessionStorage.getItem(`misskey-domain`))
         if (url.searchParams.has('session')) {
-            const domain = sessionStorage.getItem(`misskey-v12-domain`);
-            const session = sessionStorage.getItem(`misskey-v12-${domain}-session`);
+            const domain = sessionStorage.getItem(`misskey-domain`);
+            const session = sessionStorage.getItem(`misskey-${domain}-session`);
             const url = `https://${domain}/api/miauth/${session}/check`
             const data = {}
             data.method = 'POST'
@@ -101,8 +102,8 @@ class MisskeyNoteClientV12 { // https://forum.misskey.io/d/6-miauth
             const json = await res.json()
             console.debug(json)
             console.debug(JSON.stringify(json))
-            sessionStorage.setItem(`misskey-v12-token`, json.token)
-            sessionStorage.setItem(`misskey-v12-user`, json.user)
+            sessionStorage.setItem(`misskey-token`, json.token)
+            sessionStorage.setItem(`misskey-user`, json.user)
         }
     }
     async getToken(appSecret, token) {
