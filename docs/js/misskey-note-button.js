@@ -46,7 +46,9 @@ class MisskeyNoteButton extends HTMLElement {
     }
     #noteEvent(json) { 
         this.#clearSettion()
-        WebmentionRequester.request(`https://${this.domain}/notes/${json.id}`)
+        if (WebmentionRequester) {
+            WebmentionRequester.request(`https://${this.domain}/notes/${json.id}`)
+        }
         const params = {
             domain: this.domain,
             json: json,

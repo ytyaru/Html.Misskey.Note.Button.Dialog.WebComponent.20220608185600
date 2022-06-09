@@ -1,5 +1,5 @@
 class WebmentionRequester {
-    async static request(source, target=null) { // json: note応答
+    static async request(source, target=null) { // json: note応答
         const url = 'https://webmention.io/aaronpk/webmention'
         const params = new URLSearchParams();
         //const sourceUrl = `https://${this.domain}/notes/${json.id}`
