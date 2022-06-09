@@ -80,7 +80,8 @@ class MisskeyNoteClient {
         };
         return await this.post('auth/session/userkey', null, params)
     }
-    async getI(appSecret, accessToken) { return await this.#sha256(appSecret + accessToken) }
+    async getI(accessToken, appSecret) { return await this.#sha256(accessToken + appSecret) }
+    //async getI(appSecret, accessToken) { return await this.#sha256(appSecret + accessToken) }
     /*
     async verify(accessToken) {
         console.debug('----- verify -----')

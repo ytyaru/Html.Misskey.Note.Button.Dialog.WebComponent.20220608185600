@@ -163,7 +163,7 @@ button:focus, button:focus img {
             console.debug(v)
             this.#errorApi(v)
             */
-            const i = await client.getI(sessionStorage.getItem(`${domain}-secret`), json.accessToken)
+            const i = await client.getI(json.accessToken, sessionStorage.getItem(`${domain}-secret`))
             const res = await client.note(i, text)
             this.#errorApi(res)
             this.#requestWebmention(res)
