@@ -338,7 +338,7 @@ button:focus, button:focus img {
         const url = 'https://webmention.io/aaronpk/webmention'
         const params = new URLSearchParams();
         const sourceUrl = `https://${this.domain}/notes/${json.id}`
-        params.set('source', json.url) // ノートのURL。https://pawoo.net/web/textes/108412336135014487 など
+        params.set('source', sourceUrl) // ノートのURL。https://misskey.dev/notes/919xbt0i78 など
         params.set('target', location.href) // コメントを表示するサイトのURL。https://ytyaru.github.io/ など
         const body = params.toString()
         const datas = {
