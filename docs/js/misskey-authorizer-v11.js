@@ -9,7 +9,7 @@ class MisskeyAuthorizerV11 {
         this.client = new MisskeyRestClient(this.domain)
     }
     async authorize(text) {
-        this._createApp()
+        this.#createApp()
         const app = await this.#createApp().catch(e=>alert(e))
         console.debug(app)
         sessionStorage.setItem(`misskey-domain`, this.domain);

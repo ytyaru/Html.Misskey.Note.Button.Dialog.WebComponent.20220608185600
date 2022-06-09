@@ -20,11 +20,11 @@ class MisskeyNoteButton extends HTMLElement {
         shadow.innerHTML = gen.generate()
         this.shadowRoot.querySelector('img').addEventListener('animationend', (e)=>{ e.target.classList.remove('jump'); e.target.classList.remove('flip'); }, false);
         this.#addListenerEvent()
-        this._authorizer = ('misskey.io' == this.domain) ? new MisskeyAuthorizerV12(this.domain) : new MisskeyAuthorizerV11(this.domain)
-        const i = await this._authorizer.redirectCallback()
+        this._authorizer = this.#getAuthorizer()
+        const i = await this._authorizer.redirectCallback().catch(e=>this.#error(e))
         if (i) {
             this._client = new MisskeyApiClient(sessionStorage.getItem(`misskey-domain`), i)
-            const res = await this._client.note(sessionStorage.getItem(`misskey-text`))
+            const res = await this._client.note(sessionStorage.getItem(`misskey-text`)).catch(e=>this.#error(e))
             this.#noteEvent(res)
         }
     }
@@ -36,8 +36,17 @@ class MisskeyNoteButton extends HTMLElement {
         else if ('ng-msg' === property) { this.ngMsg = newValue}
         else { this[property] = newValue; }
     }
+    #getAuthorizer() { // ミスキーv12.39以降とそれ以前では認証方法が違うため必要。本当はversionをAPIで取得して判定させたかったが、versionを取得できなかったため諦めた。
+        return ('misskey.io' == this.domain) ? new MisskeyAuthorizerV12(this.domain) : new MisskeyAuthorizerV11(this.domain)
+    }
+    #error(e) {
+        console.error(e)
+        this.#clearSettion()
+        throw e
+    }
     #noteEvent(json) { 
         this.#clearSettion()
+        WebmentionRequester.request(`https://${this.domain}/notes/${json.id}`)
         const params = {
             domain: this.domain,
             json: json,
@@ -62,7 +71,7 @@ class MisskeyNoteButton extends HTMLElement {
     }
     #isExistInstance() {
         // 入力したドメインが存在するか（リンク切れでないか）
-        // 入力したドメインはマストドンのインスタンスか（どうやってそれを判定するか）
+        // 入力したドメインはミスキーのインスタンスか（どうやってそれを判定するか）
         return true
     }
     async #note(target) {
@@ -80,11 +89,10 @@ class MisskeyNoteButton extends HTMLElement {
             console.debug(domain)
             if (this._client) { // リダイレクト承認済みなら
                 console.debug('リダイレクト承認に成功しているため即座にノートします');
-                const res = await this._client.note(this.#getText())
-                this.#requestWebmention(res)
+                const res = await this._client.note(this.#getText()).catch(e=>this.#error(e))
                 this.#noteEvent(res)
             } else { // リダイレクト承認していないなら、それをする
-                await this._authorizer.authorize(this.#getText())
+                await this._authorizer.authorize(this.#getText()).catch(e=>this.#error(e))
             }
         } catch(error) {
             console.error(error)
@@ -96,31 +104,14 @@ class MisskeyNoteButton extends HTMLElement {
         sessionStorage.removeItem(`${this.domain}-id`)
         sessionStorage.removeItem(`${this.domains}-secret`)
         sessionStorage.removeItem(`${this.domains}-token`)
-        sessionStorage.removeItem(`${this.domains}-note-text`)
-        sessionStorage.removeItem(`${this.domains}-this.domains`)
+        sessionStorage.removeItem(`${this.domains}-text`)
+        sessionStorage.removeItem(`${this.domains}-domains`)
         sessionStorage.removeItem(`${this.domains}-accessToken`)
         sessionStorage.removeItem(`${this.domains}-i`)
-    }
-    async #requestWebmention(json) { // json: note応答
-        const url = 'https://webmention.io/aaronpk/webmention'
-        const params = new URLSearchParams();
-        const sourceUrl = `https://${this.domain}/notes/${json.id}`
-        params.set('source', sourceUrl) // ノートのURL。https://misskey.dev/notes/919xbt0i78 など
-        params.set('target', location.href) // コメントを表示するサイトのURL。https://ytyaru.github.io/ など
-        const body = params.toString()
-        const datas = {
-            method: 'POST',
-            headers: {'Accept': 'application/json', 'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8'},
-            body: body,
-        }
-        console.debug(url)
-        console.debug(params)
-        console.debug(datas)
-        const res = await fetch(url, datas)
-        console.debug(res)
-        const j = await res.json()
-        console.debug(j)
-        return j
+        sessionStorage.removeItem(`misskey-domain`)
+        sessionStorage.removeItem(`misskey-${this.domains}-session`)
+        sessionStorage.removeItem(`misskey-token`)
+        sessionStorage.removeItem(`misskey-user`)
     }
     #toast(message, error=false) {
         console.debug(message)
