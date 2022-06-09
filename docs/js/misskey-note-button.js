@@ -46,11 +46,13 @@ class MisskeyNoteButton extends HTMLElement {
         throw e
     }
     #noteEvent(json) { 
+        console.log('----- #noteEvent -----')
         console.log(this.domain)
         console.log(json.createdNote.id)
-        console.log(`https://${this.domain}/notes/${json.createdNote.id}`)
+        const url = `https://${this.domain}/notes/${json.createdNote.id}`
+        console.log(url)
         if (WebmentionRequester) {
-            new WebmentionRequester().request(`https://${this.domain}/notes/${json.createdNote.id}`)
+            new WebmentionRequester().request(url)
         }
         const params = {
             domain: this.domain,
