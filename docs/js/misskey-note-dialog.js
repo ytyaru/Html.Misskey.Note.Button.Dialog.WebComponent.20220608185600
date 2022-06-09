@@ -234,7 +234,7 @@ button:focus, button:focus img {
         console.debug('--------------------------')
         console.debug(this.shadowRoot.getElementById('status'))
         this.shadowRoot.getElementById('status').addEventListener('input', (event) => {
-            const LIMIT = 500
+            const LIMIT = 2000
             const remaining = LIMIT - event.target.innerText.length
             console.debug(remaining)
             this.shadowRoot.getElementById('status-remaining').textContent = remaining;

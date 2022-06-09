@@ -1,7 +1,8 @@
 class MisskeyNoteButton extends HTMLElement {
-    constructor(domain) {
+    //constructor(domain) {
+    constructor() {
         super();
-        this.domain = domain
+        this.domain = null
         this.text = ''
         this.imgSrc = null
         this.imgSize = '64'
@@ -113,8 +114,12 @@ button:focus, button:focus img {
     }
     async #redirectCallback() { // 認証したあとに戻ってきたらノートする
         const url = new URL(location.href)
+        console.debug('----- #redirectCallback() -----')
+        console.debug(url, url.href)
+        //console.debug(url.searchParams.has('token'), url.searchParams.has('domain'))
+        console.debug(url.searchParams.has('token'), sessionStorage.getItem(`misskey-domain`))
         // マストドンAPI oauth/authorize でリダイレクトされた場合（認証を拒否した場合）
-        if(url.searchParams.has('error') && url.searchParams.get('domain')) {
+        if(url.searchParams.has('error')) {
             console.debug(this.domain, url.searchParams.get('domain'))
             if (this.domain === url.searchParams.get('domain')) {
                 console.debug((url.searchParams.has('error_description')) ? decodeURI(url.searchParams.get('error_description')) : '認証エラーです。')
@@ -127,10 +132,13 @@ button:focus, button:focus img {
                 history.replaceState('', '', url.pathname);
             }
         }
+
         // misskey API auth/session/generate でリダイレクトされた場合（認証に成功した場合）
-        else if (url.searchParams.has('token') && url.searchParams.get('domain')) {
+        //else if (url.searchParams.has('token') && url.searchParams.has('domain')) {
+        else if (url.searchParams.has('token')) {
             console.debug('------------- 認証に成功した（リダイレクトされた） -------------')
-            const domain = url.searchParams.get('domain') // mstdn.jp, pawoo.net, ...
+            //const domain = url.searchParams.get('domain') // mstdn.jp, pawoo.net, ...
+            const domain = sessionStorage.getItem(`misskey-domain`);
             const client = new MisskeyNoteClient(domain)
             const token = url.searchParams.get('token')
             sessionStorage.setItem(`${domain}-token`, token)
@@ -155,14 +163,14 @@ button:focus, button:focus img {
             console.debug(v)
             this.#errorApi(v)
             */
-            const i = client.getI(sessionStorage.getItem(`${domain}-secret`), json.accessToken)
+            const i = await client.getI(sessionStorage.getItem(`${domain}-secret`), json.accessToken)
             const res = await client.note(i, text)
             this.#errorApi(res)
             this.#requestWebmention(res)
             sessionStorage.removeItem(`text`)
             //this.classList.remove('jump');
             //this.classList.remove('flip');
-            this.#tootEvent(res)
+            this.#noteEvent(res)
             console.debug('----- 以上 -----')
         }
     }
@@ -171,19 +179,19 @@ button:focus, button:focus img {
         if (json.hasOwnProperty('error')) {
             this.#toast(json.error, true)
             //sessionStorage.removeItem(`${domain}-app`, JSON.stringify(app));
-            sessionStorage.removeItem(`${domain}-client_id`, app.client_id);
-            sessionStorage.removeItem(`${domain}-client_secret`, app.client_secret);
+            sessionStorage.removeItem(`${domain}-id`, app.client_id);
+            sessionStorage.removeItem(`${domain}-secret`, app.client_secret);
             //sessionStorage.removeItem(`text`);
             sessionStorage.removeItem(`${domain}-accessToken`, json.accessToken);
             throw new Error(`マストドンAPIでエラーがありました。詳細はデバッグログやsessionStorageを参照してください。: ${JSON.stringify(json)}`)
         }
     }
-    #tootEvent(json) { 
+    #noteEvent(json) { 
         const params = {
             domain: this.domain,
             json: json,
         }
-        this.dispatchEvent(new CustomEvent('toot', {detail: params}));
+        this.dispatchEvent(new CustomEvent('note', {detail: params}));
     }
     async #make() {
         const button = await this.#makeSendButton()
@@ -249,12 +257,12 @@ button:focus, button:focus img {
     }
     #addListenerEvent() { // ノートボタンを押したときの動作を実装する
         //this.addEventListener('pointerdown', async(event) => {
-        this.addEventListener('click', async(event) => { console.debug('click toot-button'); await this.#toot(event.target) });
+        this.addEventListener('click', async(event) => { console.debug('click toot-button'); await this.#note(event.target) });
         // clickとあわせて２回発行されてしまう！　もうスマホ側は知らん。
         //this.addEventListener('pointerdown', async(event) => { console.debug('pointer-down toot-button'); this.dispatchEvent(new Event('click')) });
-        //this.addEventListener('pointerdown', async(event) => { this.#toot() });
+        //this.addEventListener('pointerdown', async(event) => { this.#note() });
     }
-    #getStatus() {
+    #getText() {
         if (this.text) { return this.text }
         // toot-dialogのtoot-text要素から取得しようと思ったが、shadow要素のためか取得できなかった。
     }
@@ -268,9 +276,9 @@ button:focus, button:focus img {
         // 入力したドメインはマストドンのインスタンスか（どうやってそれを判定するか）
         return true
     }
-    async #toot(target) {
+    async #note(target) {
         console.debug('ノートボタンを押しました。')
-        const text = this.#getStatus()
+        const text = this.#getText()
         console.debug(text)
         if (!text || 0 === text.trim().length) {
             this.#toast('ノート内容を入れてください。', true)
@@ -283,32 +291,34 @@ button:focus, button:focus img {
         console.debug(domain)
         const client = new MisskeyNoteClient(domain)
         const accessToken = sessionStorage.getItem(`${domain}-accessToken`)
-        if (accessToken && client.verify(accessToken)) {
+        //if (accessToken && client.verify(accessToken)) {
+        if (accessToken) {
             console.debug('既存のトークンが有効なため即座にノートします。');
             //const res = await client.toot(accessToken, this.text)
-            const res = await client.toot(accessToken, this.#getStatus())
+            const res = await client.note(accessToken, this.#getText())
             this.#errorApi(res)
             this.#requestWebmention(res)
             //event.target.classList.remove('jump');
             //event.target.classList.remove('flip');
-            this.#tootEvent(res)
+            this.#noteEvent(res)
         } else {
             console.debug('既存のトークンがないか無効のため、新しいアクセストークンを発行します。');
             const app = await client.createApp().catch(e=>alert(e))
             this.#errorApi(app)
             //console.debug(app.client_id)
             //console.debug(app.client_secret)
-            console.debug(sessionStorage.getItem(`${domain}-id`))
-            console.debug(sessionStorage.getItem(`${domain}-name`))
-            console.debug(sessionStorage.getItem(`${domain}-secret`))
+            //console.debug(sessionStorage.getItem(`${domain}-id`))
+            //console.debug(sessionStorage.getItem(`${domain}-name`))
+            //console.debug(sessionStorage.getItem(`${domain}-secret`))
             sessionStorage.setItem(`${domain}-app`, JSON.stringify(app));
             sessionStorage.setItem(`${domain}-id`, app.id);
             sessionStorage.setItem(`${domain}-secret`, app.secret);
-            const text = document.getElementById('text')
+            //const text = document.getElementById('text')
             //sessionStorage.setItem(`text`, (text.hasAttribute('contenteditable')) ? text.innerText : text.value);
             //sessionStorage.setItem(`text`, this.text);
-            sessionStorage.setItem(`text`, this.#getStatus());
-            client.authorize(app.client_id)
+            sessionStorage.setItem(`misskey-domain`, this.domain);
+            sessionStorage.setItem(`misskey-note-text`, this.#getText());
+            client.authorize(app.secret)
         }
     }
     async #requestWebmention(json) { // json: toot応答

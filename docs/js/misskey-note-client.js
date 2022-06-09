@@ -53,7 +53,8 @@ class MisskeyNoteClient {
             name: `note requester`,
             description: `request note`,
             permission: this.permission,
-            callbackUrl: this.callbackUrl + `?domain=${this.domain}`,
+            callbackUrl: this.callbackUrl,
+            //callbackUrl: this.callbackUrl + `?domain=${this.domain}`,
         };
         //return await this.post('api/v1/apps', null, params)
         return await this.post('app/create', null, params)
@@ -66,8 +67,10 @@ class MisskeyNoteClient {
         const res = await this.post('auth/session/generate', null, params)
         console.debug(res)
         sessionStorage.setItem(`${this.domain}-token`, res.token);
-        console.debug(res.url)
-        //window.location.href = res.url
+        sessionStorage.setItem(`misskey-note-text`, this.text);
+        const sleep = (second) => new Promise(resolve => setTimeout(resolve, second * 1000))
+        await sleep(2)
+        window.location.href = res.url
     }
     async getToken(appSecret, token) {
         console.debug('----- token -----')
@@ -77,7 +80,7 @@ class MisskeyNoteClient {
         };
         return await this.post('auth/session/userkey', null, params)
     }
-    async getI(appSecret, accessToken) { return this.#sha256(appSecret + accessToken) }
+    async getI(appSecret, accessToken) { return await this.#sha256(appSecret + accessToken) }
     /*
     async verify(accessToken) {
         console.debug('----- verify -----')
