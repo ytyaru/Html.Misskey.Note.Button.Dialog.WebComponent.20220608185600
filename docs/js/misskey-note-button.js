@@ -238,7 +238,8 @@ button:focus, button:focus img {
         if (this.imgSrc) { return this.imgSrc }
         //return `http://www.google.com/s2/favicons?domain=${this.domain}`
         if (this.domain) { return `https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://${this.domain}&size=${this.imgSize}` }
-        return `./asset/image/mastodon_mascot.svg`
+        return `./asset/image/misskey.png`
+        //return `./asset/image/mastodon_mascot.svg`
         /*
         if (this.imgSrc) { return this.imgSrc }
         if (this.img) {
@@ -257,14 +258,14 @@ button:focus, button:focus img {
     }
     #addListenerEvent() { // ノートボタンを押したときの動作を実装する
         //this.addEventListener('pointerdown', async(event) => {
-        this.addEventListener('click', async(event) => { console.debug('click toot-button'); await this.#note(event.target) });
+        this.addEventListener('click', async(event) => { console.debug('click note-button'); await this.#note(event.target) });
         // clickとあわせて２回発行されてしまう！　もうスマホ側は知らん。
-        //this.addEventListener('pointerdown', async(event) => { console.debug('pointer-down toot-button'); this.dispatchEvent(new Event('click')) });
+        //this.addEventListener('pointerdown', async(event) => { console.debug('pointer-down note-button'); this.dispatchEvent(new Event('click')) });
         //this.addEventListener('pointerdown', async(event) => { this.#note() });
     }
     #getText() {
         if (this.text) { return this.text }
-        // toot-dialogのtoot-text要素から取得しようと思ったが、shadow要素のためか取得できなかった。
+        // note-dialogのnote-text要素から取得しようと思ったが、shadow要素のためか取得できなかった。
     }
     #getDomain() {
         const domain = window.prompt('インスタンスのURLかドメイン名を入力してください。');
@@ -277,53 +278,66 @@ button:focus, button:focus img {
         return true
     }
     async #note(target) {
-        console.debug('ノートボタンを押しました。')
-        const text = this.#getText()
-        console.debug(text)
-        if (!text || 0 === text.trim().length) {
-            this.#toast('ノート内容を入れてください。', true)
-            return
-        }
-        //event.target.classList.add('jump');
-        target.classList.add('jump');
-        const domain = (this.domain) ? this.domain : this.#getDomain()
-        this.domain = domain
-        console.debug(domain)
-        const client = new MisskeyNoteClient(domain)
-        const accessToken = sessionStorage.getItem(`${domain}-accessToken`)
-        //if (accessToken && client.verify(accessToken)) {
-        if (accessToken) {
-            console.debug('既存のトークンが有効なため即座にノートします。');
-            //const res = await client.toot(accessToken, this.text)
-            const res = await client.note(accessToken, this.#getText())
-            this.#errorApi(res)
-            this.#requestWebmention(res)
-            //event.target.classList.remove('jump');
-            //event.target.classList.remove('flip');
-            this.#noteEvent(res)
-        } else {
-            console.debug('既存のトークンがないか無効のため、新しいアクセストークンを発行します。');
-            const app = await client.createApp().catch(e=>alert(e))
-            this.#errorApi(app)
-            //console.debug(app.client_id)
-            //console.debug(app.client_secret)
-            //console.debug(sessionStorage.getItem(`${domain}-id`))
-            //console.debug(sessionStorage.getItem(`${domain}-name`))
-            //console.debug(sessionStorage.getItem(`${domain}-secret`))
-            sessionStorage.setItem(`${domain}-app`, JSON.stringify(app));
-            sessionStorage.setItem(`${domain}-id`, app.id);
-            sessionStorage.setItem(`${domain}-secret`, app.secret);
-            //const text = document.getElementById('text')
-            //sessionStorage.setItem(`text`, (text.hasAttribute('contenteditable')) ? text.innerText : text.value);
-            //sessionStorage.setItem(`text`, this.text);
-            sessionStorage.setItem(`misskey-domain`, this.domain);
-            sessionStorage.setItem(`misskey-note-text`, this.#getText());
-            client.authorize(app.secret)
+        try {
+            console.debug('ノートボタンを押しました。')
+            const text = this.#getText()
+            console.debug(text)
+            if (!text || 0 === text.trim().length) {
+                this.#toast('ノート内容を入れてください。', true)
+                return
+            }
+            //event.target.classList.add('jump');
+            target.classList.add('jump');
+            const domain = (this.domain) ? this.domain : this.#getDomain()
+            this.domain = domain
+            console.debug(domain)
+            const client = new MisskeyNoteClient(domain)
+            const accessToken = sessionStorage.getItem(`${domain}-accessToken`)
+            //if (accessToken && client.verify(accessToken)) {
+            if (accessToken) {
+                console.debug('既存のトークンが有効なため即座にノートします。');
+                //const res = await client.toot(accessToken, this.text)
+                const res = await client.note(accessToken, this.#getText())
+                this.#errorApi(res)
+                this.#requestWebmention(res)
+                //event.target.classList.remove('jump');
+                //event.target.classList.remove('flip');
+                this.#noteEvent(res)
+            } else {
+                console.debug('既存のトークンがないか無効のため、新しいアクセストークンを発行します。');
+                const app = await client.createApp().catch(e=>alert(e))
+                this.#errorApi(app)
+                //console.debug(app.client_id)
+                //console.debug(app.client_secret)
+                //console.debug(sessionStorage.getItem(`${domain}-id`))
+                //console.debug(sessionStorage.getItem(`${domain}-name`))
+                //console.debug(sessionStorage.getItem(`${domain}-secret`))
+                sessionStorage.setItem(`${domain}-app`, JSON.stringify(app));
+                sessionStorage.setItem(`${domain}-id`, app.id);
+                sessionStorage.setItem(`${domain}-secret`, app.secret);
+                //const text = document.getElementById('text')
+                //sessionStorage.setItem(`text`, (text.hasAttribute('contenteditable')) ? text.innerText : text.value);
+                //sessionStorage.setItem(`text`, this.text);
+                sessionStorage.setItem(`misskey-domain`, this.domain);
+                sessionStorage.setItem(`misskey-note-text`, this.#getText());
+                client.authorize(app.secret)
+            }
+        } catch(error) {
+            console.error(error)
+            sessionStorage.removeItem(`${domain}-app`)
+            sessionStorage.removeItem(`${domain}-id`)
+            sessionStorage.removeItem(`${domain}-secret`)
+            sessionStorage.removeItem(`${domain}-token`)
+            sessionStorage.removeItem(`${domain}-note-text`)
+            sessionStorage.removeItem(`${domain}-domain`)
+            sessionStorage.removeItem(`${domain}-accessToken`)
+            sessionStorage.removeItem(`${domain}-i`)
         }
     }
-    async #requestWebmention(json) { // json: toot応答
+    async #requestWebmention(json) { // json: note応答
         const url = 'https://webmention.io/aaronpk/webmention'
         const params = new URLSearchParams();
+        const sourceUrl = `https://${this.domain}/notes/${json.id}`
         params.set('source', json.url) // ノートのURL。https://pawoo.net/web/textes/108412336135014487 など
         params.set('target', location.href) // コメントを表示するサイトのURL。https://ytyaru.github.io/ など
         const body = params.toString()

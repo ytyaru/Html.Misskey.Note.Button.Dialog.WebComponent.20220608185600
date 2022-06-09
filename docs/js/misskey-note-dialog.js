@@ -1,16 +1,16 @@
-class TootDialog extends HTMLElement {
+class MisskeyNoteDialog extends HTMLElement {
     constructor() {
         super();
         this.domain = []
-        this.status = 'いいね！'
+        this.text = 'いいね！'
         this.imgSrc = null
         this.imgSize = '64'
-        this.title = 'トゥートする'
-        this.okMsg = 'トゥートしました！'
+        this.title = 'ノートする'
+        this.okMsg = 'ノートしました！'
         this.ngMsg = 'キャンセルしました。'
     }
     static get observedAttributes() {
-        return ['domain', 'status', 'img-src', 'img-size', 'title', 'ok-msg', 'ng-msg'];
+        return ['domain', 'text', 'img-src', 'img-size', 'title', 'ok-msg', 'ng-msg'];
     }
     async connectedCallback() {
         console.debug('=======================================')
@@ -33,20 +33,20 @@ class TootDialog extends HTMLElement {
     #makeCss() { return `${this.#cssBase()}${this.#cssButton()}${this.#cssAnimation()}${this.#cssFocsAnimation()}` }
     //#cssBase() { return `img{cursor:pointer; text-align:center; vertical-align:middle; user-select:none;}` }
     #cssBase() { return `
-#toot-dialog {
+#misskey-note-dialog {
     top: 2.5%;
     left: 2.5%;
     padding: 0.25em;
     margin: 0;
     border: 4mm ridge rgba(211, 220, 50, .6);
 }
-#toot-dialog {
+#misskey-note-dialog {
     z-index: 1;
 }
 .toastify { /* dialog よりも手前に表示したい */
     z-index: 9;
 }
-#toot-dialog #status {
+#misskey-note-dialog #text {
     padding: 0.25em;
     margin-bottom: 0.5em;
     border: thick solid green;
@@ -54,21 +54,21 @@ class TootDialog extends HTMLElement {
     outline: none;
     background-color: #DDDDDD;
 }
-#toot-dialog #status:focus {
+#misskey-note-dialog #text:focus {
     padding: 0.25em;
     border: thick solid green;
     border-radius: 0.5em;
     background-color: #FFFFFF;
     outline: none;
 }
-#toot-dialog textarea {
+#misskey-note-dialog textarea {
     width: 200px;
     height: 200px;
 }
-#toot-dialog a:focus img {
+#misskey-note-dialog a:focus img {
     border: thick double #32a1ce;
 }
-#toot-button {
+#misskey-note-button {
     width: auto;
     padding: 0;
     margin: 0;
@@ -172,7 +172,7 @@ button:focus, button:focus img {
     }
     #makeButtonElement() {
         const button = document.createElement('button')
-        button.setAttribute('id', 'toot-button')
+        button.setAttribute('id', 'misskey-note-button')
         button.setAttribute('title', this.title)
         return button
     }
@@ -193,133 +193,134 @@ button:focus, button:focus img {
         else { return (parseInt(this.imgSize)) ? [parseInt(this.imgSize), parseInt(this.imgSize)] : [64, 64] }
     }
     #getImgSrc() {
-        return `./asset/image/mastodon_mascot.svg`
+        //return `./asset/image/mastodon_mascot.svg`
+        return `./asset/image/misskey.png`
     }
     #makeDialog() {
         const dialog = document.createElement('dialog')
-        dialog.setAttribute('id', 'toot-dialog')
+        dialog.setAttribute('id', 'misskey-note-dialog')
         const form = document.createElement('form')
         form.setAttribute('method', 'dialog')
 
-        const status = document.createElement('div')
-        status.setAttribute('id', 'status')
-        status.setAttribute('contenteditable', 'true')
+        const text = document.createElement('div')
+        text.setAttribute('id', 'text')
+        text.setAttribute('contenteditable', 'true')
         const remaining = document.createElement('span')
-        remaining.setAttribute('id', 'status-remaining')
+        remaining.setAttribute('id', 'text-remaining')
 
         // ボタン生成
         const buttons = []
         for (const domain of this.domain) {
-            buttons.push(`<toot-button domain="${domain}"></toot-button>`)
+            buttons.push(`<misskey-note-button domain="${domain}"></misskey-note-button>`)
         }
-        buttons.push(`<toot-button></toot-button>`)
-        buttons.push(`<button id="toot-dialog-close"><span style="font-size:${this.imgSize}px;">❌</span></button>`)
+        buttons.push(`<misskey-note-button></misskey-note-button>`)
+        buttons.push(`<button id="misskey-note-dialog-close"><span style="font-size:${this.imgSize}px;">❌</span></button>`)
 
-        form.appendChild(status)
+        form.appendChild(text)
         form.appendChild(remaining)
         form.innerHTML += buttons.join('')
         dialog.appendChild(form)
         return dialog
     }
-    #addListenerEvent(shadow) { // トゥートボタンを押したときの動作を実装する
+    #addListenerEvent(shadow) { // ノートボタンを押したときの動作を実装する
         console.debug(this.shadowRoot)
-        //this.shadowRoot.getElementById('toot-button').addEventListener('pointerdown', (event) => {
-        this.shadowRoot.getElementById('toot-button').addEventListener('click', (event)=>{ console.debug('click', event.target); this.#show(event.target) });
+        //this.shadowRoot.getElementById('misskey-note-button').addEventListener('pointerdown', (event) => {
+        this.shadowRoot.getElementById('misskey-note-button').addEventListener('click', (event)=>{ console.debug('click', event.target); this.#show(event.target) });
         /* clickとあわせて２回発行されてしまう！　もうスマホ側は知らん。
-        this.shadowRoot.getElementById('toot-button').addEventListener('pointerdown', (event) => {
+        this.shadowRoot.getElementById('misskey-note-button').addEventListener('pointerdown', (event) => {
             // なぜかthis.#show(event.target)だとフォーカスが当たらない。clickなら成功するがpointerdownだと失敗する理由が不明。なのでもうclickイベントを発火させることにした。
-            this.shadowRoot.getElementById('status').dispatchEvent(new Event('click'))
+            this.shadowRoot.getElementById('text').dispatchEvent(new Event('click'))
         });
         */
         console.debug('--------------------------')
-        console.debug(this.shadowRoot.getElementById('status'))
-        this.shadowRoot.getElementById('status').addEventListener('input', (event) => {
+        console.debug(this.shadowRoot.getElementById('text'))
+        this.shadowRoot.getElementById('text').addEventListener('input', (event) => {
             const LIMIT = 2000
             const remaining = LIMIT - event.target.innerText.length
             console.debug(remaining)
-            this.shadowRoot.getElementById('status-remaining').textContent = remaining;
+            this.shadowRoot.getElementById('text-remaining').textContent = remaining;
             console.debug(event.target.innerText)
-            // トゥートしたときstatusが空値になる問題への対応。ボタンの数だけデータが冗長になってしまうが、TootButton側を改変せずに済む。
-            for (const button of this.shadowRoot.querySelectorAll(`toot-button`)) {
-                button.setAttribute('status', this.shadowRoot.getElementById('status').innerText)
-                console.debug(button.getAttribute('status'))
+            // ノートしたときtextが空値になる問題への対応。ボタンの数だけデータが冗長になってしまうが、TootButton側を改変せずに済む。
+            for (const button of this.shadowRoot.querySelectorAll(`misskey-note-button`)) {
+                button.setAttribute('text', this.shadowRoot.getElementById('text').innerText)
+                console.debug(button.getAttribute('text'))
             }
         });
-        //for (const button of this.shadowRoot.getElementsByName('toot-button')) {
-        for (const button of this.shadowRoot.querySelectorAll(`toot-button`)) {
+        //for (const button of this.shadowRoot.getElementsByName('misskey-note-button')) {
+        for (const button of this.shadowRoot.querySelectorAll(`misskey-note-button`)) {
             /*
-            トゥートしたときstatusが空値になる問題。
-            TootButtonのほうでもclickイベントを実装していて、そちらでtootをリクエストしている。が、そこで渡すstatusはここでセットしている。両方で定義されたclickイベントのうち、どちらが先に実行されるのか不定なのでは？
+            ノートしたときtextが空値になる問題。
+            TootButtonのほうでもclickイベントを実装していて、そちらでnoteをリクエストしている。が、そこで渡すtextはここでセットしている。両方で定義されたclickイベントのうち、どちらが先に実行されるのか不定なのでは？
             button.addEventListener('click', (event) => {
                 //event.target.classList.add('jump');
-                console.debug('トゥートボタンを押した。値を渡す。')
-                event.target.setAttribute('status', this.shadowRoot.getElementById('status').innerText)
+                console.debug('ノートボタンを押した。値を渡す。')
+                event.target.setAttribute('text', this.shadowRoot.getElementById('text').innerText)
             });
             button.addEventListener('pointerdown', (event) => {
                 //event.target.classList.add('jump');
-                console.debug('トゥートボタンを押した。値を渡す。')
-                event.target.setAttribute('status', this.shadowRoot.getElementById('status').innerText)
+                console.debug('ノートボタンを押した。値を渡す。')
+                event.target.setAttribute('text', this.shadowRoot.getElementById('text').innerText)
             });
             */
-            button.addEventListener('click', (event) => {event.target.setAttribute('status', this.shadowRoot.getElementById('status').innerText)});
+            button.addEventListener('click', (event) => {event.target.setAttribute('text', this.shadowRoot.getElementById('text').innerText)});
             // clickとpointerdownで２回発行されてしまう！
-            //button.addEventListener('pointerdown', (event) => {event.target.setAttribute('status', this.shadowRoot.getElementById('status').innerText)});
-            button.addEventListener('toot', (event) => {
+            //button.addEventListener('pointerdown', (event) => {event.target.setAttribute('text', this.shadowRoot.getElementById('text').innerText)});
+            button.addEventListener('note', (event) => {
                 console.debug(event)
                 console.debug(event.detail)
                 console.debug(JSON.stringify(event.detail))
-                if (event.detail.hasOwnProperty('error')) { this.#toast('トゥートに失敗しました……') }
+                if (event.detail.hasOwnProperty('error')) { this.#toast('ノートに失敗しました……') }
                 else {
-                    this.#toast('トゥートしました！')
-                    this.shadowRoot.getElementById('toot-dialog').close()
+                    this.#toast('ノートしました！')
+                    this.shadowRoot.getElementById('misskey-note-dialog').close()
                     console.debug(event.target)
                     console.debug(event.detail)
-                    this.dispatchEvent(new CustomEvent('toot', {detail: event.detail}));
+                    this.dispatchEvent(new CustomEvent('note', {detail: event.detail}));
                 }
                 //document.getElementById('res').value = JSON.stringify(event.json)
             });
         }
-        this.shadowRoot.getElementById('toot-dialog-close').addEventListener('keydown', (event) => {
+        this.shadowRoot.getElementById('misskey-note-dialog-close').addEventListener('keydown', (event) => {
             if ('Tab' === event.key && !event.shiftKey) {
                 event.preventDefault()
-                this.shadowRoot.getElementById('status').focus()
+                this.shadowRoot.getElementById('text').focus()
             }
         });
-        this.shadowRoot.getElementById('status').addEventListener('keydown', (event) => {
+        this.shadowRoot.getElementById('text').addEventListener('keydown', (event) => {
             if ('Tab' === event.key && event.shiftKey) {
                 event.preventDefault()
-                this.shadowRoot.getElementById('toot-dialog-close').focus()
+                this.shadowRoot.getElementById('misskey-note-dialog-close').focus()
             }
         });
         document.addEventListener('click', (event) => {
-            if(!event.target.closest(`toot-dialog`)) {
-                this.shadowRoot.getElementById('status').dispatchEvent(new Event('input'))
-                this.shadowRoot.getElementById('toot-dialog').close();
+            if(!event.target.closest(`misskey-note-dialog`)) {
+                this.shadowRoot.getElementById('text').dispatchEvent(new Event('input'))
+                this.shadowRoot.getElementById('misskey-note-dialog').close();
             }
         });
-        this.shadowRoot.getElementById('toot-dialog').addEventListener('keydown', (event) => {
+        this.shadowRoot.getElementById('misskey-note-dialog').addEventListener('keydown', (event) => {
             if ('Escape' === event.key) {
                 event.preventDefault()
-                this.shadowRoot.getElementById('status').dispatchEvent(new Event('input'))
-                this.shadowRoot.getElementById('toot-dialog').close();
+                this.shadowRoot.getElementById('text').dispatchEvent(new Event('input'))
+                this.shadowRoot.getElementById('misskey-note-dialog').close();
             }
         });
     }
     #show(target) {
         target.classList.add('jump');
-        //this.shadowRoot.getElementById('toot-dialog').showModal();
-        this.shadowRoot.getElementById('toot-dialog').show();
-        const status = this.shadowRoot.getElementById('status');
-        console.log(this.shadowRoot.querySelector(`toot-button[status]`))
-        status.innerText = (this.shadowRoot.querySelector(`toot-button[status]`)) ? this.shadowRoot.querySelector(`toot-button[status]`).getAttribute('status') : this.status + '\n' + location.href
-        this.shadowRoot.getElementById('status').dispatchEvent(new Event('input'))
-        console.log(this.shadowRoot.getElementById('status-remaining').innerHTML)
-        status.focus();
-        //this.#setCaretStart(status)
-        //this.shadowRoot.getElementById('status').dispatchEvent(new Event('input'))
+        //this.shadowRoot.getElementById('misskey-note-dialog').showModal();
+        this.shadowRoot.getElementById('misskey-note-dialog').show();
+        const text = this.shadowRoot.getElementById('text');
+        console.log(this.shadowRoot.querySelector(`misskey-note-button[text]`))
+        text.innerText = (this.shadowRoot.querySelector(`misskey-note-button[text]`)) ? this.shadowRoot.querySelector(`misskey-note-button[text]`).getAttribute('text') : this.text + '\n' + location.href
+        this.shadowRoot.getElementById('text').dispatchEvent(new Event('input'))
+        console.log(this.shadowRoot.getElementById('text-remaining').innerHTML)
+        text.focus();
+        //this.#setCaretStart(text)
+        //this.shadowRoot.getElementById('text').dispatchEvent(new Event('input'))
     }
     #setCaretStart(target) { // キャレットを先頭にセットする
-        //status.setSelectionRange(0, 0);
+        //text.setSelectionRange(0, 0);
         var range = document.createRange()
         var sel = window.getSelection()
         range.setStart(target.childNodes[0], 0)
@@ -335,6 +336,6 @@ button:focus, button:focus img {
     }
 }
 window.addEventListener('DOMContentLoaded', (event) => {
-    customElements.define('toot-dialog', TootDialog);
+    customElements.define('misskey-note-dialog', MisskeyNoteDialog);
 });
 
