@@ -45,7 +45,9 @@ class MisskeyNoteButton extends HTMLElement {
         throw e
     }
     #noteEvent(json) { 
-        this.#clearSettion()
+        console.log(this.domain)
+        console.log(json.id)
+        console.log(`https://${this.domain}/notes/${json.id}`)
         if (WebmentionRequester) {
             new WebmentionRequester().request(`https://${this.domain}/notes/${json.id}`)
         }
@@ -54,6 +56,7 @@ class MisskeyNoteButton extends HTMLElement {
             json: json,
         }
         this.dispatchEvent(new CustomEvent('note', {detail: params}));
+        this.#clearSettion()
     }
     #addListenerEvent() { // ノートボタンを押したときの動作を実装する
         //this.addEventListener('pointerdown', async(event) => {
@@ -102,18 +105,19 @@ class MisskeyNoteButton extends HTMLElement {
         }
     }
     #clearSettion() {
+        console.log('----- clearSettion -----', this.domain)
         sessionStorage.removeItem(`${this.domain}-app`)
         sessionStorage.removeItem(`${this.domain}-id`)
-        sessionStorage.removeItem(`${this.domains}-secret`)
-        sessionStorage.removeItem(`${this.domains}-token`)
-        sessionStorage.removeItem(`${this.domains}-text`)
-        sessionStorage.removeItem(`${this.domains}-domains`)
-        sessionStorage.removeItem(`${this.domains}-accessToken`)
-        sessionStorage.removeItem(`${this.domains}-i`)
+        sessionStorage.removeItem(`${this.domain}-secret`)
+        sessionStorage.removeItem(`${this.domain}-token`)
+        sessionStorage.removeItem(`${this.domain}-domains`)
+        sessionStorage.removeItem(`${this.domain}-accessToken`)
+        sessionStorage.removeItem(`${this.domain}-i`)
         sessionStorage.removeItem(`misskey-domain`)
-        sessionStorage.removeItem(`misskey-${this.domains}-session`)
+        sessionStorage.removeItem(`misskey-${this.domain}-session`)
         sessionStorage.removeItem(`misskey-token`)
         sessionStorage.removeItem(`misskey-user`)
+        sessionStorage.removeItem(`misskey-text`)
     }
     #toast(message, error=false) {
         console.debug(message)
